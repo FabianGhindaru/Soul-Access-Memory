@@ -1,0 +1,67 @@
+---
+layout: default
+---
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>PDF Collection</title>
+    <style>
+        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif; display: flex; height: 100vh; margin: 0; background: #fafafa; }
+        #sidebar { width: 300px; background: #ffffff; border-right: 1px solid #e1e4e8; padding: 20px; overflow-y: auto; box-shadow: 2px 0 5px rgba(0,0,0,0.05); }
+        #viewer-container { flex-grow: 1; background: #525659; display: flex; flex-direction: column; }
+        #viewer { width: 100%; height: 100%; border: none; }
+        .folder-group { margin-bottom: 25px; }
+        .folder-name { font-weight: bold; color: #24292e; border-bottom: 2px solid #0366d6; padding-bottom: 5px; margin-bottom: 10px; text-transform: uppercase; font-size: 0.85em; letter-spacing: 0.5px; }
+        .pdf-item { display: block; padding: 8px 12px; color: #0366d6; text-decoration: none; border-radius: 6px; font-size: 14px; margin-bottom: 2px; transition: background 0.2s; cursor: pointer; }
+        .pdf-item:hover { background: #f1f8ff; text-decoration: underline; }
+        .empty-msg { color: #6a737d; font-style: italic; font-size: 0.9em; }
+    </style>
+</head>
+<body>
+
+<div id="sidebar">
+    <h1 style="font-size: 1.5em; margin-bottom: 20px;">📚 PDF Library</h1>
+    
+    {% assign files = site.static_files | where_exp: "file", "file.path contains 'pdfs/'" %}
+    {% assign folders = files | map: "path" %}
+    
+    {% if files.size == 0 %}
+        <p class="empty-msg">No PDFs found in the /pdfs/ folder yet!</p>
+    {% endif %}
+
+    {% assign last_folder = "" %}
+    {% for file in files %}
+        {% if file.extname == ".pdf" %}
+            {% assign path_parts = file.path | split: "/" %}
+            {% assign current_folder = path_parts[2] %}
+
+            {% if current_folder != last_folder %}
+                <div class="folder-name">{{ current_folder | replace: "_", " " }}</div>
+                {% assign last_folder = current_folder %}
+            {% endif %}
+
+            <a class="pdf-item" onclick="loadPDF('{{ site.baseurl }}{{ file.path }}')">
+                📄 {{ file.basename | replace: "_", " " | replace: "-", " " }}
+            </a>
+        {% endif %}
+    {% endfor %}
+</div>
+
+<div id="viewer-container">
+    <iframe id="viewer" src="" title="PDF Viewer"></iframe>
+</div>
+
+<script>
+    function loadPDF(url) {
+        document.getElementById('viewer').src = url;
+    }
+    // Auto-load first PDF if exists
+    window.onload = () => {
+        const first = document.querySelector('.pdf-item');
+        if (first) first.click();
+    };
+</script>
+
+</body>
+</html>
