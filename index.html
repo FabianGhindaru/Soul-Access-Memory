@@ -1,5 +1,5 @@
 ---
-layout: default
+layout: null
 ---
 <!DOCTYPE html>
 <html lang="en">
@@ -15,20 +15,24 @@ layout: default
             margin: 0; 
             background: #000000; /* Deep Black */
             color: #ffffff; 
+            overflow: hidden; /* Prevents whole-page scrolling */
         }
 
         #sidebar { 
             width: 320px; 
+            min-width: 320px; /* Prevents sidebar from collapsing */
             background: #0a0a0a; 
             border-right: 1px solid #333; 
             padding: 25px; 
             overflow-y: auto; 
+            box-sizing: border-box; /* Ensures padding doesn't break width */
         }
 
         #viewer-container { 
             flex-grow: 1; 
             background: #1a1a1a; 
             display: flex; 
+            height: 100vh; /* Forces viewer to take full height */
         }
 
         #viewer { 
@@ -37,7 +41,7 @@ layout: default
             border: none; 
         }
 
-        /* Folder Headers - Magenta like the image */
+        /* Folder Headers - Magenta */
         .folder-name { 
             font-weight: bold; 
             color: #FF00FF; 
@@ -47,9 +51,10 @@ layout: default
             font-size: 0.9em;
             letter-spacing: 1px;
             border-bottom: 1px solid #FF00FF;
+            padding-bottom: 5px;
         }
 
-        /* PDF Links - Purple like the 'Core Passives' headers */
+        /* PDF Links - Purple */
         .pdf-item { 
             display: block; 
             padding: 6px 0; 
@@ -72,6 +77,7 @@ layout: default
             text-align: center;
             border: 1px solid #FFB800;
             padding: 10px;
+            letter-spacing: 1px;
         }
 
         /* Hide scrollbar for clean look */
@@ -91,10 +97,6 @@ layout: default
         {% if file.extname == ".pdf" %}
             
             {% assign path_parts = file.path | split: "/" %}
-            {% comment %} 
-               Path logic: /SAM/01-Archetypes/file.pdf 
-               parts[0] = empty, parts[1] = SAM, parts[2] = Folder Name
-            {% endcomment %}
             {% assign current_folder = path_parts[2] %}
 
             {% if current_folder != last_folder %}
