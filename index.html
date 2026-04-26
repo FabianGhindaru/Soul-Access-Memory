@@ -6,125 +6,510 @@ layout: null
 <head>
     <meta charset="UTF-8">
     <title>SAM PDF Library</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Orbitron:wght@400;700;900&display=swap" rel="stylesheet">
     <style>
-        /* Daredevil Color Palette & Aesthetic */
-        body { 
-            font-family: 'Courier New', Courier, monospace; 
-            display: flex; 
-            height: 100vh; 
-            margin: 0; 
-            background: #000000; /* Deep Black */
-            color: #ffffff; 
-            overflow: hidden; /* Prevents whole-page scrolling */
+        :root {
+            --magenta: #FF00FF;
+            --gold: #FFB800;
+            --purple: #B080FF;
+            --bg: #000000;
+            --bg-panel: #080808;
+            --bg-mid: #0f0f0f;
+            --border: #1e1e1e;
+            --border-bright: #2e2e2e;
+            --text-dim: #555;
+            --scanline-opacity: 0.04;
         }
 
-        #sidebar { 
-            width: 320px; 
-            min-width: 320px; /* Prevents sidebar from collapsing */
-            background: #0a0a0a; 
-            border-right: 1px solid #333; 
-            padding: 25px; 
-            overflow-y: auto; 
-            box-sizing: border-box; /* Ensures padding doesn't break width */
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+
+        body {
+            font-family: 'Share Tech Mono', 'Courier New', monospace;
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+            background: var(--bg);
+            color: #fff;
+            overflow: hidden;
         }
 
-        #viewer-container { 
-            flex-grow: 1; 
-            background: #1a1a1a; 
-            display: flex; 
-            height: 100vh; /* Forces viewer to take full height */
+        /* ── Top Bar ── */
+        #topbar {
+            height: 44px;
+            min-height: 44px;
+            background: var(--bg-panel);
+            border-bottom: 1px solid var(--border-bright);
+            display: flex;
+            align-items: center;
+            padding: 0 20px;
+            gap: 16px;
+            position: relative;
+            z-index: 10;
         }
-
-        #viewer { 
-            width: 100%; 
-            height: 100%; 
-            border: none; 
+        .topbar-logo {
+            font-family: 'Orbitron', monospace;
+            font-weight: 900;
+            font-size: 0.8em;
+            color: var(--gold);
+            letter-spacing: 4px;
+            text-shadow: 0 0 12px rgba(255, 184, 0, 0.5);
         }
-
-        /* Folder Headers - Magenta */
-        .folder-name { 
-            font-weight: bold; 
-            color: #FF00FF; 
-            margin-top: 25px;
-            margin-bottom: 10px;
-            text-transform: uppercase; 
-            font-size: 0.9em;
-            letter-spacing: 1px;
-            border-bottom: 1px solid #FF00FF;
-            padding-bottom: 5px;
-        }
-
-        /* PDF Links - Purple */
-        .pdf-item { 
-            display: block; 
-            padding: 6px 0; 
-            color: #B080FF; 
-            text-decoration: none; 
-            font-size: 14px; 
-            cursor: pointer; 
-            transition: 0.2s;
-        }
-
-        .pdf-item:hover { 
-            color: #FFB800; /* Gold highlight on hover */
-            padding-left: 5px;
-        }
-
-        .site-title {
-            color: #FFB800; /* Gold */
+        .topbar-sep {
+            color: var(--border-bright);
             font-size: 1.2em;
-            margin-bottom: 30px;
-            text-align: center;
-            border: 1px solid #FFB800;
-            padding: 10px;
-            letter-spacing: 1px;
+        }
+        .topbar-breadcrumb {
+            font-size: 0.75em;
+            color: var(--text-dim);
+            flex-grow: 1;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        #active-file-label {
+            color: var(--purple);
+            transition: color 0.3s;
+        }
+        .topbar-indicator {
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+            background: var(--magenta);
+            box-shadow: 0 0 8px var(--magenta);
+            animation: pulse 2s infinite;
+        }
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.3; }
         }
 
-        /* Hide scrollbar for clean look */
-        #sidebar::-webkit-scrollbar { width: 5px; }
-        #sidebar::-webkit-scrollbar-thumb { background: #333; }
+        /* ── Main Layout ── */
+        #main {
+            display: flex;
+            flex: 1;
+            overflow: hidden;
+        }
+
+        /* ── Sidebar ── */
+        #sidebar {
+            width: 300px;
+            min-width: 300px;
+            background: var(--bg-panel);
+            border-right: 1px solid var(--border-bright);
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            position: relative;
+        }
+
+        /* subtle vertical scanlines on sidebar */
+        #sidebar::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: repeating-linear-gradient(
+                90deg,
+                transparent,
+                transparent 3px,
+                rgba(255,255,255,0.012) 3px,
+                rgba(255,255,255,0.012) 4px
+            );
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        #sidebar-inner {
+            flex: 1;
+            overflow-y: auto;
+            padding: 16px 0 24px;
+            position: relative;
+            z-index: 1;
+        }
+
+        /* custom scrollbar */
+        #sidebar-inner::-webkit-scrollbar { width: 3px; }
+        #sidebar-inner::-webkit-scrollbar-track { background: transparent; }
+        #sidebar-inner::-webkit-scrollbar-thumb { background: #2a2a2a; border-radius: 2px; }
+        #sidebar-inner::-webkit-scrollbar-thumb:hover { background: var(--border-bright); }
+
+        /* search */
+        #search-wrap {
+            padding: 12px 16px 0;
+            position: relative;
+        }
+        #search-wrap::before {
+            content: '//';
+            position: absolute;
+            left: 24px;
+            top: 22px;
+            color: var(--text-dim);
+            font-size: 0.75em;
+            pointer-events: none;
+        }
+        #search {
+            width: 100%;
+            background: #0d0d0d;
+            border: 1px solid var(--border-bright);
+            color: #fff;
+            font-family: inherit;
+            font-size: 0.78em;
+            padding: 7px 10px 7px 26px;
+            outline: none;
+            transition: border-color 0.2s, box-shadow 0.2s;
+            letter-spacing: 0.5px;
+        }
+        #search::placeholder { color: var(--text-dim); }
+        #search:focus {
+            border-color: var(--magenta);
+            box-shadow: 0 0 8px rgba(255, 0, 255, 0.15);
+        }
+
+        /* folder sections */
+        .folder-section {
+            margin-top: 20px;
+        }
+        .folder-header {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 0 16px 6px;
+            cursor: pointer;
+            user-select: none;
+        }
+        .folder-chevron {
+            color: var(--magenta);
+            font-size: 0.6em;
+            transition: transform 0.25s;
+            display: inline-block;
+        }
+        .folder-header.collapsed .folder-chevron { transform: rotate(-90deg); }
+        .folder-name {
+            font-family: 'Orbitron', monospace;
+            font-weight: 700;
+            color: var(--magenta);
+            font-size: 0.6em;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+            text-shadow: 0 0 8px rgba(255,0,255,0.3);
+            flex-grow: 1;
+        }
+        .folder-count {
+            font-size: 0.65em;
+            color: var(--text-dim);
+            border: 1px solid var(--border-bright);
+            padding: 1px 5px;
+        }
+        .folder-divider {
+            height: 1px;
+            background: linear-gradient(90deg, var(--magenta) 0%, transparent 80%);
+            opacity: 0.3;
+            margin: 0 16px 8px;
+        }
+
+        /* file list */
+        .folder-files {
+            overflow: hidden;
+            transition: max-height 0.3s ease;
+        }
+        .folder-files.collapsed { max-height: 0 !important; }
+
+        .pdf-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 7px 16px 7px 20px;
+            color: #7a7a7a;
+            text-decoration: none;
+            font-size: 0.75em;
+            cursor: pointer;
+            transition: color 0.15s, background 0.15s, padding-left 0.15s;
+            border-left: 2px solid transparent;
+            letter-spacing: 0.3px;
+            line-height: 1.35;
+            word-break: break-word;
+        }
+        .pdf-item .item-arrow {
+            color: var(--text-dim);
+            flex-shrink: 0;
+            transition: color 0.15s, transform 0.15s;
+            font-size: 0.85em;
+        }
+        .pdf-item:hover {
+            color: #ccc;
+            background: rgba(255,255,255,0.03);
+            padding-left: 24px;
+        }
+        .pdf-item:hover .item-arrow {
+            color: var(--gold);
+            transform: translateX(2px);
+        }
+        .pdf-item.active {
+            color: var(--gold);
+            border-left-color: var(--gold);
+            background: rgba(255, 184, 0, 0.06);
+            padding-left: 24px;
+        }
+        .pdf-item.active .item-arrow { color: var(--gold); }
+        .pdf-item.hidden { display: none; }
+
+        /* sidebar footer */
+        #sidebar-footer {
+            border-top: 1px solid var(--border-bright);
+            padding: 10px 16px;
+            font-size: 0.65em;
+            color: var(--text-dim);
+            display: flex;
+            justify-content: space-between;
+            position: relative;
+            z-index: 1;
+        }
+        #file-count { }
+        .footer-sig { color: #2a2a2a; }
+
+        /* ── Viewer ── */
+        #viewer-container {
+            flex: 1;
+            position: relative;
+            background: #111;
+            overflow: hidden;
+        }
+
+        /* CRT scanlines over everything */
+        #viewer-container::after {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: repeating-linear-gradient(
+                0deg,
+                transparent,
+                transparent 2px,
+                rgba(0,0,0,var(--scanline-opacity)) 2px,
+                rgba(0,0,0,var(--scanline-opacity)) 4px
+            );
+            pointer-events: none;
+            z-index: 5;
+        }
+
+        #viewer {
+            width: 100%;
+            height: 100%;
+            border: none;
+            background: #111;
+        }
+
+        /* Empty state */
+        #empty-state {
+            position: absolute;
+            inset: 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 16px;
+            pointer-events: none;
+            z-index: 2;
+        }
+        #empty-state.hidden { display: none; }
+        .empty-glyph {
+            font-family: 'Orbitron', monospace;
+            font-size: 3em;
+            font-weight: 900;
+            color: #1a1a1a;
+            letter-spacing: 6px;
+        }
+        .empty-label {
+            font-size: 0.75em;
+            color: var(--text-dim);
+            letter-spacing: 2px;
+        }
+
+        /* ── Status Bar (bottom) ── */
+        #statusbar {
+            height: 26px;
+            min-height: 26px;
+            background: var(--bg-panel);
+            border-top: 1px solid var(--border-bright);
+            display: flex;
+            align-items: center;
+            padding: 0 16px;
+            gap: 20px;
+            font-size: 0.65em;
+            color: var(--text-dim);
+            letter-spacing: 0.5px;
+        }
+        .status-item { display: flex; align-items: center; gap: 6px; }
+        .status-dot {
+            width: 4px; height: 4px;
+            border-radius: 50%;
+            background: var(--text-dim);
+        }
+        .status-dot.green { background: #00ff9d; box-shadow: 0 0 4px #00ff9d; }
+        #status-filename { color: #aaa; flex-grow: 1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+        /* ── Flash animation on file load ── */
+        @keyframes flash-in {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+        .flash { animation: flash-in 0.4s ease; }
     </style>
 </head>
 <body>
 
-<div id="sidebar">
-    <div class="site-title">S.A.M. INTERFACE</div>
-    
-    {% assign files = site.static_files | where_exp: "file", "file.path contains 'SAM/'" %}
-    
-    {% assign last_folder = "" %}
-    {% for file in files %}
-        {% if file.extname == ".pdf" %}
-            
-            {% assign path_parts = file.path | split: "/" %}
-            {% assign current_folder = path_parts[2] %}
-
-            {% if current_folder != last_folder %}
-                <div class="folder-name">{{ current_folder | replace: "_", " " }}</div>
-                {% assign last_folder = current_folder %}
-            {% endif %}
-
-            <a class="pdf-item" onclick="loadPDF('{{ site.baseurl }}{{ file.path }}')">
-                > {{ file.basename | replace: "_", " " | replace: "-", " " }}
-            </a>
-        {% endif %}
-    {% endfor %}
+<!-- TOP BAR -->
+<div id="topbar">
+    <span class="topbar-logo">SAM</span>
+    <span class="topbar-sep">/</span>
+    <span class="topbar-breadcrumb">DATA_ARCHIVE / <span id="active-file-label">—</span></span>
+    <div class="topbar-indicator"></div>
 </div>
 
-<div id="viewer-container">
-    <iframe id="viewer" src="" title="PDF Viewer"></iframe>
+<!-- MAIN -->
+<div id="main">
+
+    <!-- SIDEBAR -->
+    <div id="sidebar">
+        <div id="sidebar-inner">
+            <!-- Search -->
+            <div id="search-wrap">
+                <input id="search" type="text" placeholder="SEARCH FILES..." autocomplete="off" spellcheck="false">
+            </div>
+
+            <!-- Jekyll generates folders + files -->
+            {% assign files = site.static_files | where_exp: "file", "file.path contains 'SAM/'" %}
+            {% assign last_folder = "" %}
+            {% assign folder_open = false %}
+
+            {% for file in files %}
+                {% if file.extname == ".pdf" %}
+                    {% assign path_parts = file.path | split: "/" %}
+                    {% assign current_folder = path_parts[2] %}
+
+                    {% if current_folder != last_folder %}
+                        {% if folder_open %}</div></div>{% endif %}
+                        {% assign last_folder = current_folder %}
+                        {% assign folder_open = true %}
+                        <div class="folder-section">
+                            <div class="folder-header" onclick="toggleFolder(this)">
+                                <span class="folder-chevron">▶</span>
+                                <span class="folder-name">{{ current_folder | replace: "_", " " }}</span>
+                                <span class="folder-count">–</span>
+                            </div>
+                            <div class="folder-divider"></div>
+                            <div class="folder-files">
+                    {% endif %}
+
+                    <a class="pdf-item" onclick="loadPDF('{{ site.baseurl }}{{ file.path }}', this, '{{ file.basename | replace: "_", " " | replace: "-", " " }}')">
+                        <span class="item-arrow">›</span>{{ file.basename | replace: "_", " " | replace: "-", " " }}
+                    </a>
+
+                {% endif %}
+            {% endfor %}
+            {% if folder_open %}</div></div>{% endif %}
+        </div>
+
+        <!-- Sidebar Footer -->
+        <div id="sidebar-footer">
+            <span id="file-count" class="status-item">
+                <span class="status-dot green"></span>
+                <span id="fc-num">0</span> FILES
+            </span>
+            <span class="footer-sig">// SAM DATA</span>
+        </div>
+    </div>
+
+    <!-- VIEWER -->
+    <div id="viewer-container">
+        <div id="empty-state">
+            <div class="empty-glyph">SAM</div>
+            <div class="empty-label">SELECT A FILE TO VIEW</div>
+        </div>
+        <iframe id="viewer" src="" title="PDF Viewer"></iframe>
+    </div>
+
+</div>
+
+<!-- STATUS BAR -->
+<div id="statusbar">
+    <div class="status-item">
+        <div class="status-dot green"></div>
+        ONLINE
+    </div>
+    <span id="status-filename">NO FILE LOADED</span>
+    <div class="status-item">SAM_LIB v1.0</div>
 </div>
 
 <script>
-    function loadPDF(url) {
-        document.getElementById('viewer').src = url;
+    // ── Folder collapse/expand ──
+    function toggleFolder(header) {
+        const files = header.parentElement.querySelector('.folder-files');
+        const collapsed = header.classList.toggle('collapsed');
+        if (collapsed) {
+            files.classList.add('collapsed');
+        } else {
+            files.classList.remove('collapsed');
+            files.style.maxHeight = files.scrollHeight + 'px';
+        }
     }
-    
+
+    // Set initial max-heights for animation
+    document.querySelectorAll('.folder-files').forEach(f => {
+        f.style.maxHeight = f.scrollHeight + 'px';
+    });
+
+    // Count files per folder
+    document.querySelectorAll('.folder-section').forEach(section => {
+        const count = section.querySelectorAll('.pdf-item').length;
+        section.querySelector('.folder-count').textContent = count;
+    });
+
+    // Total file count
+    const total = document.querySelectorAll('.pdf-item').length;
+    document.getElementById('fc-num').textContent = total;
+
+    // ── Load PDF ──
+    let activeItem = null;
+    function loadPDF(url, el, name) {
+        if (activeItem) activeItem.classList.remove('active');
+        el.classList.add('active');
+        activeItem = el;
+
+        const viewer = document.getElementById('viewer');
+        viewer.classList.remove('flash');
+        void viewer.offsetWidth; // reflow to restart animation
+        viewer.src = url;
+        viewer.classList.add('flash');
+
+        const displayName = name.toUpperCase();
+        document.getElementById('active-file-label').textContent = displayName;
+        document.getElementById('status-filename').textContent = displayName;
+        document.getElementById('empty-state').classList.add('hidden');
+    }
+
+    // ── Search ──
+    document.getElementById('search').addEventListener('input', function() {
+        const q = this.value.toLowerCase().trim();
+        document.querySelectorAll('.pdf-item').forEach(item => {
+            const match = item.textContent.toLowerCase().includes(q);
+            item.classList.toggle('hidden', q !== '' && !match);
+        });
+        // Show/hide folder sections if all items hidden
+        document.querySelectorAll('.folder-section').forEach(section => {
+            const visible = section.querySelectorAll('.pdf-item:not(.hidden)').length;
+            section.style.display = visible === 0 && q !== '' ? 'none' : '';
+        });
+    });
+
+    // ── Auto-open first PDF ──
     window.onload = () => {
         const first = document.querySelector('.pdf-item');
-        if (first) first.click();
+        if (first) {
+            const url = first.getAttribute('onclick').match(/'([^']+)'/)[1];
+            const name = first.textContent.replace('›', '').trim();
+            loadPDF(url, first, name);
+        }
     };
 </script>
-
 </body>
 </html>
