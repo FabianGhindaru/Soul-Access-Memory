@@ -5,35 +5,96 @@ layout: default
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>PDF Collection</title>
+    <title>SAM PDF Library</title>
     <style>
-        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif; display: flex; height: 100vh; margin: 0; background: #fafafa; }
-        #sidebar { width: 300px; background: #ffffff; border-right: 1px solid #e1e4e8; padding: 20px; overflow-y: auto; box-shadow: 2px 0 5px rgba(0,0,0,0.05); }
-        #viewer-container { flex-grow: 1; background: #525659; display: flex; flex-direction: column; }
-        #viewer { width: 100%; height: 100%; border: none; }
-        .folder-group { margin-bottom: 25px; }
-        .folder-name { font-weight: bold; color: #24292e; border-bottom: 2px solid #0366d6; padding-bottom: 5px; margin-bottom: 10px; text-transform: uppercase; font-size: 0.85em; letter-spacing: 0.5px; }
-        .pdf-item { display: block; padding: 8px 12px; color: #0366d6; text-decoration: none; border-radius: 6px; font-size: 14px; margin-bottom: 2px; transition: background 0.2s; cursor: pointer; }
-        .pdf-item:hover { background: #f1f8ff; text-decoration: underline; }
-        .empty-msg { color: #6a737d; font-style: italic; font-size: 0.9em; }
+        /* Daredevil Color Palette & Aesthetic */
+        body { 
+            font-family: 'Courier New', Courier, monospace; 
+            display: flex; 
+            height: 100vh; 
+            margin: 0; 
+            background: #000000; /* Deep Black */
+            color: #ffffff; 
+        }
+
+        #sidebar { 
+            width: 320px; 
+            background: #0a0a0a; 
+            border-right: 1px solid #333; 
+            padding: 25px; 
+            overflow-y: auto; 
+        }
+
+        #viewer-container { 
+            flex-grow: 1; 
+            background: #1a1a1a; 
+            display: flex; 
+        }
+
+        #viewer { 
+            width: 100%; 
+            height: 100%; 
+            border: none; 
+        }
+
+        /* Folder Headers - Magenta like the image */
+        .folder-name { 
+            font-weight: bold; 
+            color: #FF00FF; 
+            margin-top: 25px;
+            margin-bottom: 10px;
+            text-transform: uppercase; 
+            font-size: 0.9em;
+            letter-spacing: 1px;
+            border-bottom: 1px solid #FF00FF;
+        }
+
+        /* PDF Links - Purple like the 'Core Passives' headers */
+        .pdf-item { 
+            display: block; 
+            padding: 6px 0; 
+            color: #B080FF; 
+            text-decoration: none; 
+            font-size: 14px; 
+            cursor: pointer; 
+            transition: 0.2s;
+        }
+
+        .pdf-item:hover { 
+            color: #FFB800; /* Gold highlight on hover */
+            padding-left: 5px;
+        }
+
+        .site-title {
+            color: #FFB800; /* Gold */
+            font-size: 1.2em;
+            margin-bottom: 30px;
+            text-align: center;
+            border: 1px solid #FFB800;
+            padding: 10px;
+        }
+
+        /* Hide scrollbar for clean look */
+        #sidebar::-webkit-scrollbar { width: 5px; }
+        #sidebar::-webkit-scrollbar-thumb { background: #333; }
     </style>
 </head>
 <body>
 
 <div id="sidebar">
-    <h1 style="font-size: 1.5em; margin-bottom: 20px;">📚 PDF Library</h1>
+    <div class="site-title">S.A.M. INTERFACE</div>
     
-    {% assign files = site.static_files | where_exp: "file", "file.path contains 'pdfs/'" %}
-    {% assign folders = files | map: "path" %}
+    {% assign files = site.static_files | where_exp: "file", "file.path contains 'SAM/'" %}
     
-    {% if files.size == 0 %}
-        <p class="empty-msg">No PDFs found in the /pdfs/ folder yet!</p>
-    {% endif %}
-
     {% assign last_folder = "" %}
     {% for file in files %}
         {% if file.extname == ".pdf" %}
+            
             {% assign path_parts = file.path | split: "/" %}
+            {% comment %} 
+               Path logic: /SAM/01-Archetypes/file.pdf 
+               parts[0] = empty, parts[1] = SAM, parts[2] = Folder Name
+            {% endcomment %}
             {% assign current_folder = path_parts[2] %}
 
             {% if current_folder != last_folder %}
@@ -42,7 +103,7 @@ layout: default
             {% endif %}
 
             <a class="pdf-item" onclick="loadPDF('{{ site.baseurl }}{{ file.path }}')">
-                📄 {{ file.basename | replace: "_", " " | replace: "-", " " }}
+                > {{ file.basename | replace: "_", " " | replace: "-", " " }}
             </a>
         {% endif %}
     {% endfor %}
@@ -56,7 +117,7 @@ layout: default
     function loadPDF(url) {
         document.getElementById('viewer').src = url;
     }
-    // Auto-load first PDF if exists
+    
     window.onload = () => {
         const first = document.querySelector('.pdf-item');
         if (first) first.click();
