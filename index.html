@@ -5,9 +5,13 @@ layout: null
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>SAM PDF Library</title>
+    <title>SAM MD Library</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Orbitron:wght@400;700;900&display=swap" rel="stylesheet">
+    
+    <!-- Markdown parser -->
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+
     <style>
         :root {
             --magenta: #FF00FF;
@@ -34,7 +38,7 @@ layout: null
             overflow: hidden;
         }
 
-        /* ── Top Bar ── */
+        /* ── Top Bar (unchanged) ── */
         #topbar {
             height: 44px;
             min-height: 44px;
@@ -84,14 +88,14 @@ layout: null
             50% { opacity: 0.3; }
         }
 
-        /* ── Main Layout ── */
+        /* ── Main Layout (unchanged) ── */
         #main {
             display: flex;
             flex: 1;
             overflow: hidden;
         }
 
-        /* ── Sidebar ── */
+        /* ── Sidebar (unchanged) ── */
         #sidebar {
             width: 300px;
             min-width: 300px;
@@ -102,8 +106,6 @@ layout: null
             overflow: hidden;
             position: relative;
         }
-
-        /* subtle vertical scanlines on sidebar */
         #sidebar::before {
             content: '';
             position: absolute;
@@ -118,7 +120,6 @@ layout: null
             pointer-events: none;
             z-index: 0;
         }
-
         #sidebar-inner {
             flex: 1;
             overflow-y: auto;
@@ -126,14 +127,11 @@ layout: null
             position: relative;
             z-index: 1;
         }
-
-        /* custom scrollbar */
         #sidebar-inner::-webkit-scrollbar { width: 3px; }
         #sidebar-inner::-webkit-scrollbar-track { background: transparent; }
         #sidebar-inner::-webkit-scrollbar-thumb { background: #2a2a2a; border-radius: 2px; }
         #sidebar-inner::-webkit-scrollbar-thumb:hover { background: var(--border-bright); }
 
-        /* search */
         #search-wrap {
             padding: 12px 16px 0;
             position: relative;
@@ -165,7 +163,6 @@ layout: null
             box-shadow: 0 0 8px rgba(255, 0, 255, 0.15);
         }
 
-        /* folder sections */
         .folder-section {
             margin-top: 20px;
         }
@@ -206,15 +203,13 @@ layout: null
             opacity: 0.3;
             margin: 0 16px 8px;
         }
-
-        /* file list */
         .folder-files {
             overflow: hidden;
             transition: max-height 0.3s ease;
         }
         .folder-files.collapsed { max-height: 0 !important; }
 
-        .pdf-item {
+        .md-item {
             display: flex;
             align-items: center;
             gap: 8px;
@@ -229,31 +224,30 @@ layout: null
             line-height: 1.35;
             word-break: break-word;
         }
-        .pdf-item .item-arrow {
+        .md-item .item-arrow {
             color: var(--text-dim);
             flex-shrink: 0;
             transition: color 0.15s, transform 0.15s;
             font-size: 0.85em;
         }
-        .pdf-item:hover {
+        .md-item:hover {
             color: #ccc;
             background: rgba(255,255,255,0.03);
             padding-left: 24px;
         }
-        .pdf-item:hover .item-arrow {
+        .md-item:hover .item-arrow {
             color: var(--gold);
             transform: translateX(2px);
         }
-        .pdf-item.active {
+        .md-item.active {
             color: var(--gold);
             border-left-color: var(--gold);
             background: rgba(255, 184, 0, 0.06);
             padding-left: 24px;
         }
-        .pdf-item.active .item-arrow { color: var(--gold); }
-        .pdf-item.hidden { display: none; }
+        .md-item.active .item-arrow { color: var(--gold); }
+        .md-item.hidden { display: none; }
 
-        /* sidebar footer */
         #sidebar-footer {
             border-top: 1px solid var(--border-bright);
             padding: 10px 16px;
@@ -264,17 +258,15 @@ layout: null
             position: relative;
             z-index: 1;
         }
-        #file-count { }
         .footer-sig { color: #2a2a2a; }
 
-        /* ── Viewer ── */
+        /* ── Viewer (replaces iframe) ── */
         #viewer-container {
             flex: 1;
             position: relative;
-            background: #111;
-            overflow: hidden;
+            background: #0a0a0a;   /* slightly lighter than pure black for contrast */
+            overflow: auto;       /* scroll the content if it's long */
         }
-
         /* CRT scanlines over everything */
         #viewer-container::after {
             content: '';
@@ -291,11 +283,15 @@ layout: null
             z-index: 5;
         }
 
-        #viewer {
-            width: 100%;
-            height: 100%;
-            border: none;
-            background: #111;
+        /* The rendered Markdown container */
+        #markdown-viewer {
+            position: relative;
+            z-index: 2;
+            padding: 40px 60px;
+            max-width: 900px;
+            margin: 0 auto;
+            line-height: 1.7;
+            font-size: 0.95em;
         }
 
         /* Empty state */
@@ -324,7 +320,116 @@ layout: null
             letter-spacing: 2px;
         }
 
-        /* ── Status Bar (bottom) ── */
+        /* ── Markdown Theme (custom PDF‑like styling) ── */
+        .markdown-body {
+            color: #d0d0d0;
+            font-family: 'Atkinson Hyperlegible', 'Segoe UI', sans-serif;
+        }
+        /* Headers: like PDF chapter titles */
+        .markdown-body h1,
+        .markdown-body h2,
+        .markdown-body h3 {
+            font-family: 'Orbitron', monospace;
+            font-weight: 700;
+            letter-spacing: 1px;
+            margin-top: 2em;
+            margin-bottom: 0.5em;
+        }
+        .markdown-body h1 {
+            color: var(--gold);
+            border-bottom: 2px solid var(--magenta);
+            padding-bottom: 0.3em;
+            font-size: 1.8em;
+        }
+        .markdown-body h2 {
+            color: var(--magenta);
+            font-size: 1.3em;
+            border-left: 4px solid var(--purple);
+            padding-left: 12px;
+        }
+        .markdown-body h3 {
+            color: var(--purple);
+            font-size: 1.05em;
+            text-transform: uppercase;
+        }
+        /* Bold and italic */
+        .markdown-body strong {
+            color: var(--gold);
+            font-weight: 700;
+        }
+        .markdown-body em {
+            color: #e0e0e0;
+            font-style: italic;
+        }
+        /* Links */
+        .markdown-body a {
+            color: var(--purple);
+            text-decoration: underline;
+            text-underline-offset: 3px;
+        }
+        .markdown-body a:hover {
+            color: var(--magenta);
+        }
+        /* Inline code */
+        .markdown-body code {
+            background: #1a1a1a;
+            color: var(--gold);
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-family: 'Share Tech Mono', monospace;
+            font-size: 0.9em;
+        }
+        /* Blockquotes – like a “PDF callout” */
+        .markdown-body blockquote {
+            border-left: 4px solid var(--magenta);
+            background: rgba(255,0,255,0.05);
+            margin: 1.5em 0;
+            padding: 0.8em 1.2em;
+            color: #bbb;
+            font-style: italic;
+        }
+        /* Lists */
+        .markdown-body ul,
+        .markdown-body ol {
+            padding-left: 2em;
+            margin: 1em 0;
+        }
+        .markdown-body li {
+            margin-bottom: 0.4em;
+        }
+        /* Horizontal rules */
+        .markdown-body hr {
+            border: none;
+            border-top: 1px solid var(--border-bright);
+            margin: 2em 0;
+        }
+        /* Images */
+        .markdown-body img {
+            max-width: 100%;
+            border: 2px solid var(--border-bright);
+            border-radius: 4px;
+        }
+        /* Tables – clean PDF grid */
+        .markdown-body table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 1.5em 0;
+            background: #0f0f0f;
+        }
+        .markdown-body th {
+            background: #1a1a1a;
+            color: var(--gold);
+            font-weight: 700;
+            text-align: left;
+            padding: 0.6em 1em;
+            border: 1px solid var(--border-bright);
+        }
+        .markdown-body td {
+            padding: 0.5em 1em;
+            border: 1px solid var(--border-bright);
+        }
+
+        /* Status Bar (unchanged) */
         #statusbar {
             height: 26px;
             min-height: 26px;
@@ -347,7 +452,7 @@ layout: null
         .status-dot.green { background: #00ff9d; box-shadow: 0 0 4px #00ff9d; }
         #status-filename { color: #aaa; flex-grow: 1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 
-        /* ── Flash animation on file load ── */
+        /* Flash animation */
         @keyframes flash-in {
             from { opacity: 0; }
             to { opacity: 1; }
@@ -357,7 +462,7 @@ layout: null
 </head>
 <body>
 
-<!-- TOP BAR -->
+<!-- TOP BAR (unchanged) -->
 <div id="topbar">
     <span class="topbar-logo">SAM</span>
     <span class="topbar-sep">/</span>
@@ -368,21 +473,20 @@ layout: null
 <!-- MAIN -->
 <div id="main">
 
-    <!-- SIDEBAR -->
+    <!-- SIDEBAR (now lists .md files) -->
     <div id="sidebar">
         <div id="sidebar-inner">
-            <!-- Search -->
             <div id="search-wrap">
                 <input id="search" type="text" placeholder="SEARCH FILES..." autocomplete="off" spellcheck="false">
             </div>
 
-            <!-- Jekyll generates folders + files -->
+            <!-- Jekyll: find .md files inside SAM/ -->
             {% assign files = site.static_files | where_exp: "file", "file.path contains 'SAM/'" %}
             {% assign last_folder = "" %}
             {% assign folder_open = false %}
 
             {% for file in files %}
-                {% if file.extname == ".pdf" %}
+                {% if file.extname == ".md" %}
                     {% assign path_parts = file.path | split: "/" %}
                     {% assign current_folder = path_parts[2] %}
 
@@ -400,16 +504,14 @@ layout: null
                             <div class="folder-files">
                     {% endif %}
 
-                    <a class="pdf-item" onclick="loadPDF('{{ site.baseurl }}{{ file.path }}', this, '{{ file.basename | replace: "_", " " | replace: "-", " " }}')">
+                    <a class="md-item" onclick="loadMarkdown('{{ site.baseurl }}{{ file.path }}', this, '{{ file.basename | replace: "_", " " | replace: "-", " " }}')">
                         <span class="item-arrow">›</span>{{ file.basename | replace: "_", " " | replace: "-", " " }}
                     </a>
-
                 {% endif %}
             {% endfor %}
             {% if folder_open %}</div></div>{% endif %}
         </div>
 
-        <!-- Sidebar Footer -->
         <div id="sidebar-footer">
             <span id="file-count" class="status-item">
                 <span class="status-dot green"></span>
@@ -419,18 +521,18 @@ layout: null
         </div>
     </div>
 
-    <!-- VIEWER -->
+    <!-- VIEWER (now a Markdown viewer) -->
     <div id="viewer-container">
         <div id="empty-state">
             <div class="empty-glyph">SAM</div>
             <div class="empty-label">SELECT A FILE TO VIEW</div>
         </div>
-        <iframe id="viewer" src="" title="PDF Viewer"></iframe>
+        <div id="markdown-viewer" class="markdown-body"></div>
     </div>
 
 </div>
 
-<!-- STATUS BAR -->
+<!-- STATUS BAR (unchanged) -->
 <div id="statusbar">
     <div class="status-item">
         <div class="status-dot green"></div>
@@ -453,61 +555,75 @@ layout: null
         }
     }
 
-    // Set initial max-heights for animation
     document.querySelectorAll('.folder-files').forEach(f => {
         f.style.maxHeight = f.scrollHeight + 'px';
     });
 
     // Count files per folder
     document.querySelectorAll('.folder-section').forEach(section => {
-        const count = section.querySelectorAll('.pdf-item').length;
+        const count = section.querySelectorAll('.md-item').length;
         section.querySelector('.folder-count').textContent = count;
     });
 
-    // Total file count
-    const total = document.querySelectorAll('.pdf-item').length;
+    const total = document.querySelectorAll('.md-item').length;
     document.getElementById('fc-num').textContent = total;
 
-    // ── Load PDF ──
+    // ── Markdown loading ──
     let activeItem = null;
-    function loadPDF(url, el, name) {
+    const viewerDiv = document.getElementById('markdown-viewer');
+    const emptyState = document.getElementById('empty-state');
+
+    function loadMarkdown(url, el, name) {
         if (activeItem) activeItem.classList.remove('active');
         el.classList.add('active');
         activeItem = el;
 
-        const viewer = document.getElementById('viewer');
-        viewer.classList.remove('flash');
-        void viewer.offsetWidth; // reflow to restart animation
-        viewer.src = url;
-        viewer.classList.add('flash');
+        // Fetch the raw .md file
+        fetch(url)
+            .then(response => {
+                if (!response.ok) throw new Error('File not found');
+                return response.text();
+            })
+            .then(md => {
+                // Convert Markdown to HTML
+                const html = marked.parse(md);
+                viewerDiv.innerHTML = html;
+                viewerDiv.classList.remove('flash');
+                void viewerDiv.offsetWidth;
+                viewerDiv.classList.add('flash');
+                emptyState.classList.add('hidden');
 
-        const displayName = name.toUpperCase();
-        document.getElementById('active-file-label').textContent = displayName;
-        document.getElementById('status-filename').textContent = displayName;
-        document.getElementById('empty-state').classList.add('hidden');
+                // Update UI
+                const displayName = name.toUpperCase();
+                document.getElementById('active-file-label').textContent = displayName;
+                document.getElementById('status-filename').textContent = displayName;
+            })
+            .catch(err => {
+                viewerDiv.innerHTML = '<p style="color:var(--magenta)">Error loading file.</p>';
+                console.error(err);
+            });
     }
 
     // ── Search ──
     document.getElementById('search').addEventListener('input', function() {
         const q = this.value.toLowerCase().trim();
-        document.querySelectorAll('.pdf-item').forEach(item => {
+        document.querySelectorAll('.md-item').forEach(item => {
             const match = item.textContent.toLowerCase().includes(q);
             item.classList.toggle('hidden', q !== '' && !match);
         });
-        // Show/hide folder sections if all items hidden
         document.querySelectorAll('.folder-section').forEach(section => {
-            const visible = section.querySelectorAll('.pdf-item:not(.hidden)').length;
+            const visible = section.querySelectorAll('.md-item:not(.hidden)').length;
             section.style.display = visible === 0 && q !== '' ? 'none' : '';
         });
     });
 
-    // ── Auto-open first PDF ──
+    // ── Auto-open first Markdown file ──
     window.onload = () => {
-        const first = document.querySelector('.pdf-item');
+        const first = document.querySelector('.md-item');
         if (first) {
             const url = first.getAttribute('onclick').match(/'([^']+)'/)[1];
             const name = first.textContent.replace('›', '').trim();
-            loadPDF(url, first, name);
+            loadMarkdown(url, first, name);
         }
     };
 </script>
