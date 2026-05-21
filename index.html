@@ -8,7 +8,7 @@ layout: null
     <title>SAM Markdown Library</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:ital,wght@0,400;0,700;1,400;1,700&family=Orbitron:wght@400;700;900&family=Share+Tech+Mono&family=Space+Grotesk:wght@400;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:ital,wght@0,400;0,700;1,400;1,700&family=JetBrains+Mono:ital,wght@0,400;0,700;1,400;1,700&family=Orbitron:wght@400;700;900&family=Space+Grotesk:wght@400;700&display=swap" rel="stylesheet">
     
     <!-- Markdown parser -->
     <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
@@ -314,7 +314,7 @@ layout: null
             margin-bottom: 1em;
         }
 
-        /* Headers: clean, no borders */
+        /* Headers: clean, no borders — already Atkinson Hyperlegible */
         .markdown-body h1,
         .markdown-body h2,
         .markdown-body h3,
@@ -364,14 +364,30 @@ layout: null
             color: var(--magenta);
         }
         
-        /* Inline code */
+        /* Inline code — now JetBrains Mono */
         .markdown-body code {
             background: rgba(255, 255, 255, 0.1);
             color: #ffffff;
             padding: 0.2em 0.4em;
             border-radius: 4px;
-            font-family: 'Share Tech Mono', monospace;
+            font-family: 'JetBrains Mono', monospace;
             font-size: 0.9em;
+        }
+        
+        /* Preformatted code blocks — also JetBrains Mono */
+        .markdown-body pre {
+            background: rgba(255, 255, 255, 0.05);
+            padding: 1em;
+            border-radius: 4px;
+            overflow-x: auto;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.9em;
+        }
+        .markdown-body pre code {
+            background: none;
+            padding: 0;
+            font-size: inherit;
+            font-family: inherit;
         }
         
         /* Blockquotes – Exact visual match */
