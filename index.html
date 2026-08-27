@@ -453,6 +453,54 @@ layout: null
             border: 1px solid var(--border-bright);
         }
 
+        /* Wiki-style hover tooltips */
+        .wiki-term {
+            color: var(--gold);
+            border-bottom: 1px dotted var(--gold);
+            cursor: help;
+            position: relative;
+        }
+        .wiki-term::after {
+            content: attr(data-tooltip);
+            position: absolute;
+            bottom: 130%;
+            left: 50%;
+            transform: translateX(-50%);
+            background: #111;
+            border: 1px solid var(--border-bright);
+            color: #fff;
+            padding: 6px 10px;
+            font-size: 0.72em;
+            line-height: 1.4;
+            font-family: 'Atkinson Hyperlegible', sans-serif;
+            width: max-content;
+            max-width: 220px;
+            white-space: normal;
+            text-align: left;
+            box-shadow: 0 4px 14px rgba(0,0,0,0.6);
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.15s ease;
+            z-index: 50;
+        }
+        .wiki-term::before {
+            content: '';
+            position: absolute;
+            bottom: 122%;
+            left: 50%;
+            transform: translateX(-50%);
+            border: 5px solid transparent;
+            border-top-color: var(--border-bright);
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.15s ease;
+            z-index: 50;
+        }
+        .wiki-term:hover::after,
+        .wiki-term:hover::before {
+            opacity: 1;
+        }
+
         /* Status Bar */
         #statusbar {
             height: 26px;
@@ -592,6 +640,61 @@ layout: null
     const total = document.querySelectorAll('.md-item').length;
     document.getElementById('fc-num').textContent = total;
 
+    // ── Wiki-style term glossary ──
+    const GLOSSARY = {
+        "HP": "Hit Points - can go negative as well.",
+        "H.T.": "Healing Threashold - The maximum amount of healing you can recieve in a round. Resets at the start of the Player Phase. 
+        "MP": "Mastery Points, spent to unlock combat/narrative abilities.",
+        "CF": "Chain Factor — damage multiplier used in Chaining attacks.",
+        // add more terms here as "TERM": "definition"
+    };
+
+    const glossaryKeys = Object.keys(GLOSSARY).sort((a, b) => b.length - a.length);
+    const glossaryPattern = glossaryKeys.length
+        ? new RegExp('\\b(' + glossaryKeys.map(k => k.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')).join('|') + ')\\b', 'g')
+        : null;
+
+    function applyTooltips(root) {
+        if (!glossaryPattern) return;
+
+        const walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT, {
+            acceptNode(node) {
+                const parentTag = node.parentElement ? node.parentElement.tagName : '';
+                if (parentTag === 'CODE' || parentTag === 'PRE') return NodeFilter.FILTER_REJECT;
+                if (node.parentElement && node.parentElement.closest('.wiki-term')) return NodeFilter.FILTER_REJECT;
+                glossaryPattern.lastIndex = 0;
+                return glossaryPattern.test(node.nodeValue) ? NodeFilter.FILTER_ACCEPT : NodeFilter.FILTER_SKIP;
+            }
+        });
+
+        const nodes = [];
+        let n;
+        while ((n = walker.nextNode())) nodes.push(n);
+
+        nodes.forEach(textNode => {
+            const text = textNode.nodeValue;
+            const frag = document.createDocumentFragment();
+            let lastIndex = 0;
+            glossaryPattern.lastIndex = 0;
+            let match;
+            while ((match = glossaryPattern.exec(text)) !== null) {
+                if (match.index > lastIndex) {
+                    frag.appendChild(document.createTextNode(text.slice(lastIndex, match.index)));
+                }
+                const span = document.createElement('span');
+                span.className = 'wiki-term';
+                span.textContent = match[0];
+                span.setAttribute('data-tooltip', GLOSSARY[match[0]]);
+                frag.appendChild(span);
+                lastIndex = match.index + match[0].length;
+            }
+            if (lastIndex < text.length) {
+                frag.appendChild(document.createTextNode(text.slice(lastIndex)));
+            }
+            textNode.parentNode.replaceChild(frag, textNode);
+        });
+    }
+
     // ── Markdown loading ──
     let activeItem = null;
     const viewerDiv = document.getElementById('markdown-viewer');
@@ -612,6 +715,7 @@ layout: null
                 // Convert Markdown to HTML
                 const html = marked.parse(md);
                 viewerDiv.innerHTML = html;
+                applyTooltips(viewerDiv);
                 viewerDiv.classList.remove('flash');
                 void viewerDiv.offsetWidth;
                 viewerDiv.classList.add('flash');
