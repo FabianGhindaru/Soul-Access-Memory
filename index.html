@@ -377,6 +377,7 @@ layout: null
             left: -1.2em;
             color: var(--text-dim);
             text-decoration: none;
+            border-bottom: none;
             font-weight: 400;
             opacity: 0;
             transition: opacity 0.15s, color 0.15s;
@@ -520,51 +521,90 @@ layout: null
         .markdown-body tbody tr { transition: background 0.12s; }
         .markdown-body tbody tr:hover { background: rgba(255,255,255,0.03); }
 
-        /* Wiki-style hover tooltips */
+        /* ── Wiki-style glossary tooltips ── */
         .wiki-term {
             color: var(--gold);
-            border-bottom: 1px dotted var(--gold);
+            border-bottom: 1px dashed rgba(255, 201, 77, 0.45);
             cursor: help;
-            position: relative;
+            border-radius: 3px;
+            padding: 0 2px;
+            outline: none;
+            transition: color 0.15s, background 0.15s, border-color 0.15s;
         }
-        .wiki-term::after {
-            content: attr(data-tooltip);
-            position: absolute;
-            bottom: 130%;
-            left: 50%;
-            transform: translateX(-50%);
-            background: #141419;
-            border: 1px solid var(--border-bright);
-            color: var(--text);
-            padding: 8px 12px;
-            font-size: 0.72em;
-            line-height: 1.5;
+        .wiki-term:hover,
+        .wiki-term:focus-visible {
+            color: #ffe08a;
+            background: rgba(255, 201, 77, 0.1);
+            border-bottom-color: var(--gold);
+            border-bottom-style: solid;
+        }
+
+        .glossary-tip {
+            position: fixed;
+            top: 0; left: 0;
+            z-index: 100;
             width: max-content;
-            max-width: 240px;
-            white-space: normal;
-            text-align: left;
-            border-radius: 8px;
-            box-shadow: 0 8px 24px rgba(0,0,0,0.7);
+            max-width: 280px;
+            background: #13131a;
+            border: 1px solid var(--border-bright);
+            border-radius: 10px;
+            padding: 10px 14px 12px;
+            box-shadow:
+                0 14px 40px rgba(0, 0, 0, 0.8),
+                0 0 0 1px rgba(255, 255, 255, 0.02),
+                0 0 28px rgba(255, 201, 77, 0.06);
             opacity: 0;
+            transform: translateY(4px) scale(0.97);
+            transition: opacity 0.16s ease, transform 0.16s ease;
             pointer-events: none;
-            transition: opacity 0.15s ease;
-            z-index: 50;
         }
-        .wiki-term::before {
+        .glossary-tip.show {
+            opacity: 1;
+            transform: translateY(0) scale(1);
+            pointer-events: auto;
+        }
+        .glossary-tip-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 12px;
+            padding-bottom: 7px;
+            margin-bottom: 7px;
+            border-bottom: 1px solid var(--border);
+        }
+        .gt-term {
+            font-family: 'JetBrains Mono', monospace;
+            font-weight: 700;
+            font-size: 0.74em;
+            letter-spacing: 2px;
+            color: var(--gold);
+            text-transform: uppercase;
+        }
+        .gt-tag {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.56em;
+            letter-spacing: 1.5px;
+            color: var(--text-dim);
+            border: 1px solid var(--border-bright);
+            border-radius: 4px;
+            padding: 1px 6px;
+            flex-shrink: 0;
+        }
+        .glossary-tip-body {
+            font-size: 0.78em;
+            line-height: 1.55;
+            color: #c9c9d6;
+            font-family: 'Atkinson Hyperlegible', sans-serif;
+        }
+        .glossary-tip::before {
             content: '';
             position: absolute;
-            bottom: 122%;
-            left: 50%;
+            left: var(--arrow-x, 50%);
             transform: translateX(-50%);
-            border: 5px solid transparent;
-            border-top-color: var(--border-bright);
-            opacity: 0;
-            pointer-events: none;
-            transition: opacity 0.15s ease;
-            z-index: 50;
+            border: 6px solid transparent;
         }
-        .wiki-term:hover::after,
-        .wiki-term:hover::before { opacity: 1; }
+        .glossary-tip.pos-above::before { bottom: -11px; border-top-color: #13131a; }
+        .glossary-tip.pos-below::before { top: -11px; border-bottom-color: #13131a; }
 
         /* Flash animation */
         @keyframes flash-in {
@@ -777,6 +817,7 @@ layout: null
                 }
                 const span = document.createElement('span');
                 span.className = 'wiki-term';
+                span.setAttribute('tabindex', '0');
                 span.textContent = match[0];
                 span.setAttribute('data-tooltip', GLOSSARY[match[0]]);
                 frag.appendChild(span);
@@ -788,6 +829,116 @@ layout: null
             textNode.parentNode.replaceChild(frag, textNode);
         });
     }
+
+    // ── Glossary tooltip engine ──
+    const glossaryTip = document.createElement('div');
+    glossaryTip.className = 'glossary-tip';
+    glossaryTip.innerHTML =
+        '<div class="glossary-tip-header"><span class="gt-term"></span><span class="gt-tag">TERM</span></div>' +
+        '<div class="glossary-tip-body"></div>';
+    document.body.appendChild(glossaryTip);
+
+    const TIP_SHOW_DELAY = 120;
+    const TIP_HIDE_DELAY = 200;
+    let tipShowTimer = null, tipHideTimer = null, tipCurrentTerm = null;
+
+    function positionTip(term) {
+        glossaryTip.querySelector('.gt-term').textContent = term.textContent;
+        glossaryTip.querySelector('.glossary-tip-body').textContent = term.dataset.tooltip;
+
+        const rect = term.getBoundingClientRect();
+        const tW = glossaryTip.offsetWidth;
+        const tH = glossaryTip.offsetHeight;
+        const vW = window.innerWidth;
+        const vH = window.innerHeight;
+        const margin = 10;
+        const gap = 12;
+
+        // Vertical: prefer above, flip below if it doesn't fit
+        const fitsAbove = rect.top - tH - gap >= margin;
+        const fitsBelow = rect.bottom + tH + gap <= vH - margin;
+        let place;
+        if (fitsAbove) place = 'above';
+        else if (fitsBelow) place = 'below';
+        else place = (rect.top > vH / 2) ? 'above' : 'below';
+
+        let top = place === 'above' ? rect.top - tH - gap : rect.bottom + gap;
+
+        // Horizontal: center on the term, clamp to the viewport
+        let left = rect.left + rect.width / 2 - tW / 2;
+        left = Math.max(margin, Math.min(left, vW - tW - margin));
+
+        // Arrow tracks the term even when the card itself is clamped
+        const arrowX = Math.max(16, Math.min(rect.left + rect.width / 2 - left, tW - 16));
+
+        glossaryTip.classList.toggle('pos-above', place === 'above');
+        glossaryTip.classList.toggle('pos-below', place === 'below');
+        glossaryTip.style.setProperty('--arrow-x', arrowX + 'px');
+        glossaryTip.style.left = left + 'px';
+        glossaryTip.style.top = top + 'px';
+    }
+
+    function showTip(term) {
+        clearTimeout(tipShowTimer);
+        clearTimeout(tipHideTimer);
+        if (tipCurrentTerm === term && glossaryTip.classList.contains('show')) return;
+        tipCurrentTerm = term;
+        positionTip(term);
+        glossaryTip.classList.add('show');
+    }
+
+    function hideTip() {
+        clearTimeout(tipShowTimer);
+        clearTimeout(tipHideTimer);
+        glossaryTip.classList.remove('show');
+        tipCurrentTerm = null;
+    }
+
+    // Hover with intent delay (no flicker on mouse-graze)
+    document.addEventListener('mouseover', e => {
+        const term = e.target.closest('.wiki-term');
+        if (!term) return;
+        clearTimeout(tipHideTimer);
+        clearTimeout(tipShowTimer);
+        tipShowTimer = setTimeout(() => showTip(term), TIP_SHOW_DELAY);
+    });
+    document.addEventListener('mouseout', e => {
+        if (!e.target.closest('.wiki-term')) return;
+        clearTimeout(tipShowTimer);
+        tipHideTimer = setTimeout(hideTip, TIP_HIDE_DELAY);
+    });
+
+    // Let users hover the tooltip itself (handy for longer definitions)
+    glossaryTip.addEventListener('mouseover', () => clearTimeout(tipHideTimer));
+    glossaryTip.addEventListener('mouseleave', hideTip);
+
+    // Keyboard: show on focus, hide on blur
+    document.addEventListener('focusin', e => {
+        const term = e.target.closest('.wiki-term');
+        if (term) showTip(term);
+    });
+    document.addEventListener('focusout', e => {
+        if (e.target.closest('.wiki-term')) hideTip();
+    });
+
+    // Touch: tap to toggle, tap elsewhere to dismiss
+    document.addEventListener('click', e => {
+        const term = e.target.closest('.wiki-term');
+        if (term) {
+            e.preventDefault();
+            if (tipCurrentTerm === term && glossaryTip.classList.contains('show')) hideTip();
+            else showTip(term);
+            return;
+        }
+        if (!e.target.closest('.glossary-tip')) hideTip();
+    });
+
+    // Esc dismisses, scroll/resize never leaves it detached from its term
+    document.addEventListener('keydown', e => {
+        if (e.key === 'Escape') hideTip();
+    });
+    document.getElementById('viewer-container').addEventListener('scroll', hideTip, true);
+    window.addEventListener('resize', hideTip);
 
     // ── Post-processing rendered markdown ──
     function enhanceCodeBlocks(root) {
