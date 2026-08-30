@@ -1,4 +1,4 @@
-### Daredevil
+## Daredevil
 _"For those who believe that slowing down feels like dying."_
 
 The Daredevil is velocity incarnate. Leaping from rooftop to rooftop, they refuse to be held still. Fueled by adrenaline and a total disregard for consequences, the Daredevil believes that they are the only truly free soul in the city.
@@ -6,8 +6,7 @@ Yet one question remains: is this freedom authentic, or simply a way to outrun t
 _[Free & Reckless]_  AND  _[Skirmisher / Striker]_
 
 
-
------------ [ INNATE CHARACTERISTICS ] -----------------
+### Innate Characteristics
 
 **Asphalt Scars**
 At the start of combat, you may voluntarily reduce your starting HP to 5. If you do, double your Max Movement for the remainder of the encounter. This choice is available only at combat start, and its effect reverts only when you are safe.
@@ -18,7 +17,7 @@ Once per session, arrive somewhere that shouldn't be reachable such as a sealed 
 
 
 
------------ [ ARCHETYPE KEYSTONE ] ---------------
+### Archetype Keystone
 
 **No Time To Think**
 Passive. All Daredevil’s combat abilities are Free.
@@ -26,7 +25,7 @@ Applies as a Sub-Archetype as well.
 
 
 
------------ [ COMBAT ABILITIES ] -----------------
+### Combat Abilities
 
 **1. Joyride (Free)**
 Cadence. When you spend Movement during your Spotlight, you may take a willing Ally in Melee Range with you without any downsides. When your movement ends, place them in a tile adjacent to you.
