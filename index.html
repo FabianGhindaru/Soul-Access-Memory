@@ -1028,39 +1028,62 @@ layout: null
         });
     });
 
-    // ── Search ──
+    // ── Search (filenames + file contents) ──
     const searchInput = document.getElementById('search');
     const searchClear = document.getElementById('search-clear');
     const noResults = document.getElementById('no-results');
     let searchTimer;
-
+    
+    // Cache of lowercased file contents: url -> text ('' while loading / on error)
+    const contentCache = {};
+    
+    function startPreload() {
+        document.querySelectorAll('.md-item').forEach(item => {
+            const url = item.dataset.url;
+            if (url in contentCache) return;
+            contentCache[url] = ''; // placeholder so we don't fetch twice
+            fetch(url)
+                .then(r => r.ok ? r.text() : '')
+                .then(md => {
+                    contentCache[url] = md.toLowerCase();
+                    // If the user is mid-search, refresh results as content arrives
+                    if (searchInput.value.trim()) runSearch();
+                })
+                .catch(() => {}); // leave '' — file just won't match by content
+        });
+    }
+    window.addEventListener('load', startPreload);
+    
+    function runSearch() {
+        const q = searchInput.value.toLowerCase().trim();
+        searchClear.style.display = q ? 'block' : 'none';
+    
+        let anyVisible = false;
+        document.querySelectorAll('.md-item').forEach(item => {
+            const nameMatch = item.textContent.toLowerCase().includes(q);
+            const contentMatch = q !== '' && (contentCache[item.dataset.url] || '').includes(q);
+            item.classList.toggle('hidden', q !== '' && !(nameMatch || contentMatch));
+            if (!item.classList.contains('hidden')) anyVisible = true;
+        });
+        document.querySelectorAll('.folder-section').forEach(section => {
+            const visible = section.querySelectorAll('.md-item:not(.hidden)').length;
+            section.style.display = visible === 0 && q !== '' ? 'none' : '';
+        });
+        refreshFolderHeights();
+        noResults.style.display = (!anyVisible && q !== '') ? 'block' : 'none';
+    }
+    
     searchInput.addEventListener('input', function() {
         clearTimeout(searchTimer);
-        searchTimer = setTimeout(() => {
-            const q = this.value.toLowerCase().trim();
-            searchClear.style.display = q ? 'block' : 'none';
-
-            let anyVisible = false;
-            document.querySelectorAll('.md-item').forEach(item => {
-                const match = item.textContent.toLowerCase().includes(q);
-                item.classList.toggle('hidden', q !== '' && !match);
-                if (!item.classList.contains('hidden')) anyVisible = true;
-            });
-            document.querySelectorAll('.folder-section').forEach(section => {
-                const visible = section.querySelectorAll('.md-item:not(.hidden)').length;
-                section.style.display = visible === 0 && q !== '' ? 'none' : '';
-            });
-            refreshFolderHeights();
-            noResults.style.display = (!anyVisible && q !== '') ? 'block' : 'none';
-        }, 120);
+        searchTimer = setTimeout(runSearch, 120);
     });
-
+    
     searchClear.addEventListener('click', () => {
         searchInput.value = '';
         searchInput.dispatchEvent(new Event('input'));
         searchInput.focus();
     });
-
+    
     searchInput.addEventListener('keydown', (e) => {
         if (e.key === 'Escape') {
             searchInput.value = '';
