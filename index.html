@@ -523,20 +523,18 @@ layout: null
 
         /* ── Wiki-style glossary tooltips ── */
         .wiki-term {
-            color: var(--gold);
-            border-bottom: 1px dashed rgba(255, 201, 77, 0.45);
+            color: #c9f2f8;
+            font-style: italic;
             cursor: help;
             border-radius: 3px;
             padding: 0 2px;
             outline: none;
-            transition: color 0.15s, background 0.15s, border-color 0.15s;
+            transition: color 0.15s, background 0.15s;
         }
         .wiki-term:hover,
         .wiki-term:focus-visible {
-            color: #ffe08a;
-            background: rgba(255, 201, 77, 0.1);
-            border-bottom-color: var(--gold);
-            border-bottom-style: solid;
+            color: #e9fcff;
+            background: rgba(111, 240, 255, 0.08);
         }
 
         .glossary-tip {
@@ -729,6 +727,7 @@ layout: null
 <button id="back-to-top" aria-label="Back to top">↑</button>
 
 <script>
+    marked.use({ breaks: true });
     // ── Folder collapse/expand ──
     function toggleFolder(header) {
         const files = header.parentElement.querySelector('.folder-files');
