@@ -1,46 +1,37 @@
 
-## Caretaker
-_"For those who believe that keeping someone alive is an act of defiance."_
+## Facilitator
+_"For those who understand that the best work is invisible."_
 
-The Caretaker operates where the city's light doesn't reach: among the sick, the discarded, and those left to rot by the syndicates and the state. To the desperate, they are a walking sanctuary, a rare beacon of light in an otherwise suffocating dark. They restore hope to people who have been taught they have no value. But this compassion is a demanding, dangerous discipline. To protect the vulnerable, the Caretaker will weaponize their own vitality, sacrificing themselves piece by piece to ensure the shadows never claim those under their protection.
-***Devoted & Selfless*** AND ***Support / Blaster***
+The Facilitator doesn't need the spotlight. They need the mission to work. They see what each person in the room could become if given the right opening, the right nudge, the right moment — and they give it. They clear the path, handle the friction, make the hard calls in the background. People walk away feeling like heroes. The Facilitator walks away knowing they built the stage.
 
+In combat, the Facilitator plays off the Spotlight, handing it off with Setting the Stage so the next protagonist strikes or defends better. Relative to Your Vision duplicates the strongest cheap action onto a second ally, Deinterlacing Defense answers incoming damage types, and Cognitive Overload buys the crew an extra Beat each at a known price. The Big Play waits for the round when one simple action, taken by every ally at once, decides the fight.
 
+**Fantasy:** Humble & Indispensable
+**Combat Style:** Coordinator / Guardian
 
 ### Innate Characteristics
 
-**Nurturing Frenzy (Free)**
-Exhaust. Activate this mode. While active, whenever you heal a Being, all other Beings within Short Range of that Being restore the same amount of HP. This secondary healing does not count toward your Healing Threshold and does not trigger Nurturing Frenzy again.
-At the start of each Player Phase, if you did not heal any Being during the previous Round, this mode ends and you take damage equal to half your current HP as Aeon damage. If you start Fading, this mode ends without penalty.
+**Silk Network**
+Passive. When one of your Attacks, abilities, or Manifestations references a Range Band, you may measure that range from yourself or from any Ally within Medium Range. This applies to all your abilities as well. Line of sight from the chosen origin is still required where it matters.
 
-**Pays To Be Kind**
-Passive. Skill checks related to injuries, medicine, and adverse effects start with 1 Hit.
-Once per session, a Being you have helped before appears in a moment of crisis to offer aid.
-
-
-
-### Archetype Keystone
-
-**Martyr's Wish**
-You may end Nurturing Frenzy voluntarily at any time, even outside your Spotlight; this costs no Beats. You still suffer the mode's ending penalty: take damage equal to half your current HP as Aeon damage. Then restore that much HP to all Allies except yourself within Medium Range of you. This healing has Overflow.
-As a Sub-Archetype, you gain Nurturing Frenzy and Martyr's Wish, but Martyr's Wish may only be used once per session.
-
-
+**The Black Book**
+Once per session, call a Contact to gain one specific piece of high-level intel from anywhere in the city: a hidden security bypass code, the current guard rotation, the exact location of a person currently in transit and so on. This works regardless of Grid Signal.
 
 ### Combat Abilities
 
-**1. Disarming Remedy (2 Beats)**
-Create a "Circle of Remedy" centered on a point within Short Range of you. The Circle extends to Medium Range from its center and lasts until the start of the next Player Phase. Each Enemy inside the Circle when it is created, and each Enemy that starts its Enemy Phase inside it, is healed for 10 HP (this healing has no effect on Mooks and does not count toward your Healing Threshold) and gains Drain and Twist. An Enemy can only be affected by the Circle once per Round.
+**1. Deinterlacing Defense (1 Beat)**
+Cadence. Grant Resistance to Melee, Ranged, and Arcane Damage to all Allies within Melee Range until the start of the next Player Phase.
+If an Ally already has Resistance to any of these Damage Types, they gain Immunity to that Damage Type instead.
 
-**2. Kindness for Weakness (Free)**
-Exhaust. Until the end of the next Player Phase, any Enemy you heal suffers -10 to their next Defense Value.
 
-**3. Throwing Away Oneself (Free)**
-Cadence. When you heal another Being, you may take Aeon damage equal to the base healing to double that healing. The doubled healing gains Overflow.
+**2. Relative to Your Vision (Free)**
+Exhaust. Swift. When an Ally within Long Range completes an action costing 1 Beat or less, you may command a second Ally within Long Range of the first to immediately perform the same action at no Beat cost, using their own values and gear and choosing their own target. If the second Ally cannot legally duplicate the action, that Ally instead gains 1 Beat to spend before the end of this Round.
 
-**4. Covered By Light (Free)**
-Exhaust. Until the end of your current Spotlight, any ability you use that targets a Range Band has its Range increased by one step for every 2 Beings within its original Range (maximum Very Long).
+**3. Cognitive Overload (1 Beat)**
+Exhaust. All Allies within Short Range (excluding yourself) gain 1 additional Beat until the start of the next Player Phase. At the start of the next Player Phase, each of those Allies takes 10 Entropy Damage.
 
-**Special: //The Chain (1 Beat)**
-Exhaust. Select a Being within Short Range, then alternate between an Ally and an Enemy up to 5 more times; each subsequent Being must be within Short Range of the last. Heal 10 HP to each Ally in the chain and deal 5 Entropy damage to each Enemy in the chain. This healing has Overflow.
+**4. Setting the Stage (Free)**
+Cadence. When you hand the Spotlight to another Protagonist, choose one benefit for that Protagonist: +5 AV on their first Attack this Round, or +5 on their first Defense Roll this Round.
 
+**Special: The Big Play (1 Beat)**
+Exhaust. Choose one action: a basic Attack, a Lesser Manifestation, using an item, stabilizing an Ally, Hiding, moving up to 6 tiles, or a comparable simple action (Conductor's call). Every Ally within Very Long Range may immediately perform that action once at no Beat cost, each choosing a target, direction, and execution. Those Allies need neither the Spotlight nor remaining Beats to do this.
